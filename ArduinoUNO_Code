@@ -1,0 +1,70 @@
+#include <Servo.h>
+// The following code is for the LaboRCCar Shield v1.0 by Geeksmithing, but can easily be adapted to fit your needs.
+// You are free to edit, modify and share the code as you see fit in the hopes that more people will learn and benefit from it! :)
+// I did my best to comment it in a way that it might make it easier for a new Arduino user to follow
+// Checkout more geek inspired DIY content over at geeksmithing.com or my YouTube channel youtube.com/c/geeksmithing101
+
+Servo Lservo;  
+Servo Rservo;
+
+//Constants
+const int pResistor = A0;    // Photoresistor at Arduino analog pin A0
+const int pResistor2 = A1;   // Photoresistor at Arduino analog pin A1
+const int pResistor3 = A2;   // Photoresistor at Arduino analog pin A1
+
+void setup(){
+pinMode(pResistor, INPUT);   // Set pResistor - A0 pin as an input 
+pinMode(pResistor2, INPUT);  // Set pResistor - A1 pin as an input 
+pinMode(pResistor3, INPUT);  // Set pResistor - A2 pin as an input 
+
+Serial.begin(9600);          // initiate a Serial Port connection at 9600 baud rate for debugging 
+
+Lservo.attach(9);            // Set Left Servo to Arduino Digital Pin 9
+Rservo.attach(10);           // Set Right Servo to Arduino Digital Pin 10
+}
+
+void loop(){                           // The code in this loop() will continuously run over and over, constantly checking the sensors and assigning values to motors
+
+                                       // On a continuous rotation servo, the value you feed it will set the speed of the servo 
+                                       // (with 0 being full-speed in one direction, 180 being full speed in the other, and a value near 90 being no movement).
+  
+int right = analogRead(pResistor);     // here I am reading in the value of the PhotoResistor, from 0-1023 with 1023 being full brightness
+right = map(right, 0, 1023, 90, 180);  // here I am remapping that previous PhotoResistor value directly to the speed/direction of the servo.  
+                                       // So a 0 coming from the photoresistor (no light) equals 90 on the servo (no movement), 
+                                       // while 1023 on the photoresistor (full brightness) equals 180 on the servo (full speed)
+
+int left = analogRead(pResistor2);    // same idea as above but for the left motor
+left = map(left, 0, 1023, 90, 0);
+
+int back = analogRead(pResistor3);    // this is for the third light sensor that controls whether or not the car is going reverse
+back = map(back, 0, 1023, 0, 4);      // I mapped the photoresistor value to a much smaller range of numbers this time in an attempt to make it 
+                                      // more of an on or off (binary) signal, instead of a gradual analog value.. I tried 0-1 originally instead of 0-4 but was getting several false positives. 
+                                      // You might need to experiment with this a bit
+
+int Reverseright = analogRead(pResistor);         // here I am defining what the reverse value ranges would be to make the car travel backwards
+Reverseright = map(Reverseright, 0, 1023, 90, 0);
+
+int Reverseleft = analogRead(pResistor2);
+Reverseleft = map(Reverseleft, 0, 1023, 90, 180);
+
+if (back ==0){                       //in this series of if statements, if it doesn't detect value on the back variable, drive forward
+Lservo.write(left); 
+Rservo.write(right); 
+}
+if (back>=1){                        // if it DOES detect a value on the back variable, drive reverse
+Lservo.write(Reverseleft); 
+Rservo.write(Reverseright); 
+}
+
+//serial commands for debugging purposes
+Serial.println("RightValue:");
+Serial.println(Reverseright);
+Serial.println(right);
+Serial.println("LeftValue2:");
+Serial.println(Reverseleft);
+Serial.println(left);
+Serial.println("BackValue:");
+Serial.println(back);
+
+delay(200);                          // how long the Arduino pauses during each loop.  Editing this value can help or hinder you. Experiment! :)
+}
